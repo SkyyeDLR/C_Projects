@@ -204,25 +204,104 @@ struct node *generate_code(struct node *root)
                     
                     // Generate instruction based on operator
                     if (root->data == ADD) {
-                        sprintf(instr, "addi  x%d, x%d, %d", destreg, left->data, right->data);
-                        printf("%s\n", instr);
+                        // Check if immediate fits in 12 bits
+                        if (right->data >= -2048 && right->data <= 2047) {
+                            sprintf(instr, "addi  x%d, x%d, %d", destreg, left->data, right->data);
+                            printf("%s\n", instr);
+                        } else {
+                            // Load constant, then use add
+                            int const_reg = assign_reg(-1);
+                            if (const_reg == -1) {
+                                printf("Error: out of registers\n");
+                                exit(-1);
+                            }
+                            sprintf(instr, "li  x%d, %d", const_reg, right->data);
+                            printf("%s\n", instr);
+                            
+                            sprintf(instr, "add  x%d, x%d, x%d", destreg, left->data, const_reg);
+                            printf("%s\n", instr);
+                            
+                            release_reg(const_reg);
+                        }
                     }
                     else if (root->data == SUB) {
-                        // No subi, use addi with negative
-                        sprintf(instr, "addi  x%d, x%d, %d", destreg, left->data, -(right->data));
-                        printf("%s\n", instr);
+                        // Check if immediate fits in 12 bits
+                        if (right->data >= -2048 && right->data <= 2047) {
+                            // Use addi with negative (a - 5 = a + (-5))
+                            sprintf(instr, "addi  x%d, x%d, %d", destreg, left->data, -(right->data));
+                            printf("%s\n", instr);
+                        } else {
+                            // Load constant, then use sub
+                            int const_reg = assign_reg(-1);
+                            if (const_reg == -1) {
+                                printf("Error: out of registers\n");
+                                exit(-1);
+                            }
+                            sprintf(instr, "li  x%d, %d", const_reg, right->data);
+                            printf("%s\n", instr);
+                            
+                            sprintf(instr, "sub  x%d, x%d, x%d", destreg, left->data, const_reg);
+                            printf("%s\n", instr);
+                            
+                            release_reg(const_reg);
+                        }
                     }
                     else if (root->data == XOR) {
-                        sprintf(instr, "xori  x%d, x%d, %d", destreg, left->data, right->data);
-                        printf("%s\n", instr);
+                        if (right->data >= -2048 && right->data <= 2047) {
+                            sprintf(instr, "xori  x%d, x%d, %d", destreg, left->data, right->data);
+                            printf("%s\n", instr);
+                        } else {
+                            int const_reg = assign_reg(-1);
+                            if (const_reg == -1) {
+                                printf("Error: out of registers\n");
+                                exit(-1);
+                            }
+                            sprintf(instr, "li  x%d, %d", const_reg, right->data);
+                            printf("%s\n", instr);
+                            
+                            sprintf(instr, "xor  x%d, x%d, x%d", destreg, left->data, const_reg);
+                            printf("%s\n", instr);
+                            
+                            release_reg(const_reg);
+                        }
                     }
                     else if (root->data == OR) {
-                        sprintf(instr, "ori  x%d, x%d, %d", destreg, left->data, right->data);
-                        printf("%s\n", instr);
+                        if (right->data >= -2048 && right->data <= 2047) {
+                            sprintf(instr, "ori  x%d, x%d, %d", destreg, left->data, right->data);
+                            printf("%s\n", instr);
+                        } else {
+                            int const_reg = assign_reg(-1);
+                            if (const_reg == -1) {
+                                printf("Error: out of registers\n");
+                                exit(-1);
+                            }
+                            sprintf(instr, "li  x%d, %d", const_reg, right->data);
+                            printf("%s\n", instr);
+                            
+                            sprintf(instr, "or  x%d, x%d, x%d", destreg, left->data, const_reg);
+                            printf("%s\n", instr);
+                            
+                            release_reg(const_reg);
+                        }
                     }
                     else if (root->data == AND) {
-                        sprintf(instr, "andi  x%d, x%d, %d", destreg, left->data, right->data);
-                        printf("%s\n", instr);
+                        if (right->data >= -2048 && right->data <= 2047) {
+                            sprintf(instr, "andi  x%d, x%d, %d", destreg, left->data, right->data);
+                            printf("%s\n", instr);
+                        } else {
+                            int const_reg = assign_reg(-1);
+                            if (const_reg == -1) {
+                                printf("Error: out of registers\n");
+                                exit(-1);
+                            }
+                            sprintf(instr, "li  x%d, %d", const_reg, right->data);
+                            printf("%s\n", instr);
+                            
+                            sprintf(instr, "and  x%d, x%d, x%d", destreg, left->data, const_reg);
+                            printf("%s\n", instr);
+                            
+                            release_reg(const_reg);
+                        }
                     }
                     else if (root->data == SLL) {
                         sprintf(instr, "slli  x%d, x%d, %d", destreg, left->data, right->data);
