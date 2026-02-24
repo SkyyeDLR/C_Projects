@@ -150,19 +150,28 @@ struct node *generate_code(struct node *root)
                         sprintf(instr, "andi  x%d, x%d, %d", destreg, right->data, left->data);
                         printf("%s\n", instr);
                     }
-                    else {  // MUL
-                        int const_reg = assign_reg(-1);
-                        if (const_reg == -1) {
-                            printf("Error: out of registers\n");
-                            exit(-1);
+                    else if (root->data == MUL) {
+                        // Check if multiplying by a power of 2
+                        int exponent = isPowerOfTwo(left->data);  // ← Use left->data (the constant)
+                        if (exponent > 0) {
+                            // Strength reduction: use shift instead of mul
+                            sprintf(instr, "slli  x%d, x%d, %d", destreg, right->data, exponent);  // ← right->data (the reg)
+                            printf("%s\n", instr);
+                        } else {
+                            // Not a power of 2, use regular mul
+                            int const_reg = assign_reg(-1);
+                            if (const_reg == -1) {
+                                printf("Error: out of registers\n");
+                                exit(-1);
+                            }
+                            sprintf(instr, "li  x%d, %d", const_reg, left->data);  // ← left->data (the constant)
+                            printf("%s\n", instr);
+                            
+                            sprintf(instr, "mul  x%d, x%d, x%d", destreg, const_reg, right->data);  // ← const_reg, right->data
+                            printf("%s\n", instr);
+                            
+                            release_reg(const_reg);
                         }
-                        sprintf(instr, "li  x%d, %d", const_reg, left->data);
-                        printf("%s\n", instr);
-                        
-                        sprintf(instr, "%s  x%d, x%d, x%d", optable[root->data].instr, 
-                                destreg, const_reg, right->data);
-                        printf("%s\n", instr);
-                        release_reg(const_reg);
                     }
                 }
                 else {
@@ -311,8 +320,31 @@ struct node *generate_code(struct node *root)
                         sprintf(instr, "srli  x%d, x%d, %d", destreg, left->data, right->data);
                         printf("%s\n", instr);
                     }
-                    else {
-                        // MUL, DIV - need to load constant first
+                    else if (root->data == MUL) {
+                        // Check if multiplying by a power of 2
+                        int exponent = isPowerOfTwo(right->data);
+                        if (exponent > 0) {
+                            // Strength reduction: use shift instead of mul
+                            sprintf(instr, "slli  x%d, x%d, %d", destreg, left->data, exponent);
+                            printf("%s\n", instr);
+                        } else {
+                            // Not a power of 2, use regular mul
+                            int const_reg = assign_reg(-1);
+                            if (const_reg == -1) {
+                                printf("Error: out of registers\n");
+                                exit(-1);
+                            }
+                            sprintf(instr, "li  x%d, %d", const_reg, right->data);
+                            printf("%s\n", instr);
+                            
+                            sprintf(instr, "mul  x%d, x%d, x%d", destreg, left->data, const_reg);
+                            printf("%s\n", instr);
+                            
+                            release_reg(const_reg);
+                        }
+                    }
+                    else if (root->data == DIV) {
+                        // DIV - need to load constant first
                         int const_reg = assign_reg(-1);
                         if (const_reg == -1) {
                             printf("Error: out of registers\n");
@@ -321,16 +353,16 @@ struct node *generate_code(struct node *root)
                         sprintf(instr, "li  x%d, %d", const_reg, right->data);
                         printf("%s\n", instr);
                         
-                        sprintf(instr, "%s  x%d, x%d, x%d", optable[root->data].instr, 
-                                destreg, left->data, const_reg);
+                        sprintf(instr, "div  x%d, x%d, x%d", destreg, left->data, const_reg);
                         printf("%s\n", instr);
+                        
                         release_reg(const_reg);
                     }
-                    
-                    free(left);
-                    free(right);
-                    root->type = REG;
-                    root->data = destreg;
+                                
+            free(left);
+            free(right);
+            root->type = REG;
+            root->data = destreg;
             }
             // Case 4: CONST op CONST (like 3 + 7)
             else if ((left->type == CONST) && (right->type == CONST)) {

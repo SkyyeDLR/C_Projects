@@ -17,6 +17,7 @@ int assign_reg(int var);
 void printregtable(void);
 void printvartable(void);
 struct node *generate_code(struct node*);
+int isPowerOfTwo(int n);
 
 struct operator {
     enum nodetype type;
