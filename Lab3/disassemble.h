@@ -1,4 +1,10 @@
-/* add definitions of masks below */
+/* Bit field masks */
+#define OPCODEMASK   0x0000007F
+#define RDMASK       0x00000F80
+#define FUNCT3MASK   0x00007000
+#define RS1MASK      0x000F8000
+#define RS2MASK      0x01F00000
+#define FUNCT7MASK   0xFE000000
 
 #define NINSTRUCTIONS 17
 
