@@ -86,26 +86,19 @@ int disassemble(unsigned int minstr) {
             }
             break;
 
-            case 0x13:  // I-format
+            case 0x13: // I-format
                 switch (funct3) {
-                    case 0x0:  // ADDI
-                        printf("%s x%d, x%d, %d\n", mnemonics[ADDI], rd, rs1, imm_i);
-                        break;
-                    
-                    case 0x1:  // SLLI
-                        printf("%s x%d, x%d, %d\n", mnemonics[SLLI], rd, rs1, imm_i);
-                        break;
-                    
-                    case 0x4:  // XORI
-                        printf("%s x%d, x%d, %d\n", mnemonics[XORI], rd, rs1, imm_i);
+                    case 0x5: // SRLI or SRAI
+                        // Use (imm_i & 0x1F) to get only the lower 5 bits
+                        if (funct7 == 0x00) {
+                            printf("%s x%d, x%d, %d\n", mnemonics[SRLI], rd, rs1, imm_i & 0x1F);
+                        } else if (funct7 == 0x20) {
+                            printf("%s x%d, x%d, %d\n", mnemonics[SRAI], rd, rs1, imm_i & 0x1F);
+                        }
                         break;
                         
-                    case 0x5:  // SRLI or SRAI
-                        if (funct7 == 0x00) {
-                            printf("%s x%d, x%d, %d\n", mnemonics[SRLI], rd, rs1, imm_i);
-                        } else if (funct7 == 0x20) {
-                            printf("%s x%d, x%d, %d\n", mnemonics[SRAI], rd, rs1, imm_i);
-                        }
+                    case 0x1: // SLLI
+                        printf("%s x%d, x%d, %d\n", mnemonics[SLLI], rd, rs1, imm_i & 0x1F);
                         break;
                         
                     case 0x6:  // ORI
